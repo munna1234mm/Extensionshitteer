@@ -1,6 +1,6 @@
 // AUTH CONFIG
-// Replace with your Render URL after deployment (e.g. https://nexvora-auth.onrender.com)
-const RENDER_URL = 'https://nexvora-auth.onrender.com'; 
+// Replace with your Render URL after deployment
+const RENDER_URL = 'https://extensionshitteer.onrender.com'; 
 let generatedOTP = null;
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -4,7 +4,7 @@
  */
 
 (function() {
-    const RENDER_URL = 'https://nexvora-auth.onrender.com'; // User needs to update this after deployment
+    const RENDER_URL = 'https://extensionshitteer.onrender.com';
     let userChatId = 'Unknown';
 
     // Get User Chat ID from storage
