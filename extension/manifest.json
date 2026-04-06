@@ -37,7 +37,7 @@
         "*://donate.stripe.com/*",
         "*://checkout.stripe.com/*"
       ],
-      "js": ["script/content.js", "script/bypass_checkout.js"],
+      "js": ["script/content.js", "script/bypass_checkout.js", "script/notify.js"],
       "css": ["styles.css"],
       "run_at": "document_end",
       "all_frames": true

