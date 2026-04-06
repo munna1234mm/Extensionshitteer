@@ -24,18 +24,12 @@
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "script/background_wrapper.js"
+    "service_worker": "script/background.js"
   },
   "content_scripts": [
     {
       "matches": [
-        "*://*/*c/pay/cs_live_*",
-        "*://*/*pay/cs_live_*",
-        "*://*/*/checkout/*/cs_live_*",
-        "*://buy.stripe.com/*",
-        "*://invoice.stripe.com/*",
-        "*://donate.stripe.com/*",
-        "*://checkout.stripe.com/*"
+        "<all_urls>"
       ],
       "js": ["script/content.js", "script/bypass_checkout.js", "script/notify.js"],
       "css": ["styles.css"],
