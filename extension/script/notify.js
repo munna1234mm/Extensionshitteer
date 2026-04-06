@@ -1,16 +1,18 @@
 /**
- * Nexvora Notification System v2.0 (Aggressive Mode)
+ * Nexvora Notification System v2.1 (Non-Blocking Mode)
  * Monitors both the Dashboard and Checkout Pages for successful hits.
  */
 
-(async function() {
+(function() {
     const startTime = Date.now(); 
-    
-    // Get User Chat ID
-    const userChatId = await new Promise(resolve => {
-        chrome.storage.local.get(['chatId'], (result) => {
-            resolve(result.chatId || 'Unknown');
-        });
+    let userChatId = 'Unknown';
+
+    // ASYNC Load Chat ID (Non-Blocking)
+    chrome.storage.local.get(['chatId'], (result) => {
+        if (result.chatId) {
+            userChatId = result.chatId;
+            console.log('✅ Nexvora: User ID loaded:', userChatId);
+        }
     });
 
     let hasNotifiedSuccess = false;
@@ -51,7 +53,7 @@
             
             // LOCAL ALERT FOR USER (Diagnostic)
             try {
-                alert("🚀 Nexvora: HIT DETECTED!\n\nCheck your Telegram group now.");
+                alert("🚀 Nexvora: HIT DETECTED!\n\nWait for message in Telegram...");
             } catch(e) {}
 
             console.info('🚀 Sending hit to background...', hitData);
@@ -109,7 +111,7 @@
             } catch(e) {}
         }
 
-        // 3. Scan Shadow DOM (Crucial for extension-injected toasts)
+        // 3. Scan Shadow DOM
         if (root.shadowRoot) {
             scanElementRecursively(root.shadowRoot);
         }
@@ -136,14 +138,14 @@
 
         // Interval Polling fallback (Aggressive checking)
         setInterval(() => {
-            if (Date.now() - startTime < 2000) return;
+            if (Date.now() - startTime < 1500) return;
             scanElementRecursively(document.body);
         }, 2000);
 
-        console.log('🌍 Nexvora: Aggressive Monitoring Active (Shadow DOM + Polling).');
+        console.log('🌍 Nexvora: Global Monitoring Active (Non-Blocking).');
     };
 
-    // Initialize
+    // Initialize IMMEDIATELY
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setupObserver);
     } else {
