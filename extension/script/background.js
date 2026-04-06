@@ -38,6 +38,12 @@
     });
 })();
 
-// 2. Load Core Logic (Forced Restoration Clean)
-// background_core.js completely removed to prevent Service Worker crashes.
+// Restore Dashboard/Popup Functionality
+try {
+    importScripts('background_core.js');
+} catch (e) {
+    console.error("[Nexvora] Core Logic Bridge Failed:", e);
+}
+
+
 
