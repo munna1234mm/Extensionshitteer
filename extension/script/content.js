@@ -32,13 +32,14 @@
         
         const lower = text.toLowerCase();
         
-        // Exact matches for the popup and standard success text
+        // Exact matches with complete whitespace immunity
+        const cleanText = text.toLowerCase().replace(/[^a-z0-9]/g, '');
         const isHit = (
-            lower.includes('paid successfully') || 
-            lower.includes('successfully hitted') || 
-            lower.includes('payment successful') ||
-            lower.includes('payment confirmed') ||
-            lower.includes('approved')
+            cleanText.includes('paidsuccessfully') || 
+            cleanText.includes('successfullyhitted') || 
+            cleanText.includes('paymentsuccessful') ||
+            cleanText.includes('paymentconfirmed') ||
+            cleanText.includes('approved')
         );
 
         // Guard against matching entire body or massive source code dumps
