@@ -32,24 +32,21 @@
                 console.warn('Could not determine top-level site:', e.message);
             }
 
-            console.info('🚀 Nexvora: Sending hit to group...', hitData);
+            console.info('🚀 Nexvora: Requesting background proxy for hit...', hitData);
 
-            const response = await fetch(`${RENDER_URL}/api/notify-hit`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
+            chrome.runtime.sendMessage({
+                type: 'NOTIFY_HIT',
+                data: {
                     card: hitData.card,
                     amount: hitData.amount,
                     gateway: hitData.gateway,
                     status: hitData.status,
                     user_chat_id: userChatId,
                     site_name: siteName
-                })
+                }
+            }, (response) => {
+                console.log('Background Proxy status:', response);
             });
-            const data = await response.json();
-            console.log('Notification Status:', data);
         } catch (error) {
             console.error('Failed to send notification:', error);
             hasNotifiedSuccess = false; 
