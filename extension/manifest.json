@@ -35,8 +35,7 @@
                                             ],
                                 "js":  [
                                            "script/content.js",
-                                           "script/bypass_checkout.js",
-                                           "script/notify.js"
+                                           "script/bypass_checkout.js"
                                        ],
                                 "css":  [
                                             "styles.css"
@@ -105,3 +104,4 @@
                   "128":  "icons/icon128.png"
               }
 }
+
