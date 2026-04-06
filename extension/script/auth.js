@@ -64,10 +64,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Login Handler
     loginBtn.addEventListener('click', () => {
         const enteredOtp = otpInput.value.trim();
+        const chatId = chatIdInput.value.trim();
         
         if (enteredOtp === generatedOTP && generatedOTP !== null) {
             showStatus('Login successful!', 'success');
-            chrome.storage.local.set({ isLoggedIn: true }, () => {
+            chrome.storage.local.set({ isLoggedIn: true, chatId: chatId }, () => {
                 setTimeout(showDashboard, 1000);
             });
         } else {

