@@ -1,0 +1,183 @@
+/* Nexvora Login Screen Styles - White & Emerald Green */
+:root {
+  --bg: #ffffff;
+  --panel: #f8fafc;
+  --text: #0f172a;
+  --muted: #64748b;
+  --green: #10b981;
+  --green-dark: #059669;
+  --green-light: #f0fdf4;
+  --line: #e2e8f0;
+  --radius: 16px;
+}
+
+#login-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  font-family: 'Sora', sans-serif;
+  overflow: hidden;
+}
+
+#login-screen.hidden {
+  display: none !important;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 40px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--line);
+  text-align: center;
+  animation: loginSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes loginSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-logo {
+  width: 80px;
+  height: 80px;
+  background: #000;
+  border-radius: 20px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  box-shadow: 0 10px 20px rgba(16, 185, 129, 0.15);
+}
+
+.login-logo img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.login-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.login-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 32px;
+  line-height: 1.5;
+}
+
+.auth-step {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.auth-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: var(--green);
+  background: var(--bg);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.otp-section {
+  display: none; /* Hidden until OTP sent */
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.login-status {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 16px;
+  min-height: 20px;
+}
+
+.status-success { color: var(--green-dark); }
+.status-error { color: #ef4444; }
+
+.login-help {
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.login-help a {
+  color: var(--green);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.login-help a:hover {
+  text-decoration: underline;
+}
