@@ -1,67 +1,82 @@
 /**
- * Nexvora Stealth Detection (v6.0 - Silent)
- * No alerts, no logs, pure detection.
+ * Nexvora Precision Detection (v8.0 - Atomic)
+ * Independent element-level scanning to avoid 'Processing' blocks.
  */
 
 (function() {
     const startTime = Date.now();
     let hasNotified = false;
 
-    /** 1-Second Stealth Scan */
+    /** 1-Second Precision Scan */
     setInterval(() => {
         if (hasNotified) return;
-        if (Date.now() - startTime < 3000) return; // Wait 3s for page stability
+        if (Date.now() - startTime < 3000) return; // Initial page stability delay
 
-        const scan = (root) => {
+        const scanRecursive = (root) => {
             if (hasNotified || !root) return;
 
-            // Universal text extraction
-            const text = root.innerText || root.textContent || '';
-            const lower = text.toLowerCase();
+            // 1. Process each element individually (Atomic Check)
+            const elements = root.querySelectorAll ? root.querySelectorAll('*') : [];
             
-            // Refined success markers
-            const isSuccess = (
-                lower.includes('paid successfully') || 
-                lower.includes('successfully hitted') || 
-                lower.includes('approved') ||
-                lower.includes('payment successful')
-            );
-
-            if (isSuccess && text.length > 5 && !lower.includes('wait') && !lower.includes('processing')) {
-                hasNotified = true;
+            for (let el of elements) {
+                if (hasNotified) break;
                 
-                // Stealth extraction
-                const cardMatch = text.match(/\d{15,16}\|\d{2}\|\d{2,4}\|\d{3,4}/);
-                const currencyRegex = /(?:[A-Z]{2,3}|[\$£€¥])\s?[\d,]+(?:\.\d{2,3})?|[\d,]+(?:\.\d{2})?\s?(?:[A-Z]{2,3}|[\$£€¥])/gi;
-                const amountMatch = text.match(currencyRegex) || document.body.innerText.match(currencyRegex);
+                // Get immediate text content (not global body text)
+                const text = el.innerText || el.textContent || '';
+                const lower = text.toLowerCase();
 
-                // Pure background communication (No UI alert)
-                chrome.runtime.sendMessage({
-                    type: 'NOTIFY_HIT',
-                    data: {
-                        card: cardMatch ? cardMatch[0] : 'N/A',
-                        amount: amountMatch ? amountMatch[0].trim() : 'N/A',
-                        gateway: 'Stripe Gateway',
-                        status: 'Approved',
-                        site_name: window.location.hostname,
-                        user_chat_id: 'Unknown'
+                // High-Confidence Success Markers
+                const isHit = (
+                    lower.includes('paid successfully') || 
+                    lower.includes('successfully hitted') || 
+                    lower.includes('payment successful') ||
+                    lower.includes('approved')
+                );
+
+                // Atomic Validation: Check if THIS element has a success marker
+                // We ignore global 'processing' text unless it's in the SAME element.
+                if (isHit && text.length > 5 && text.length < 500) {
+                    // Check if this specific element is NOT a processing button
+                    if (!lower.includes('processing') && !lower.includes('wait')) {
+                        hasNotified = true;
+                        
+                        // Data Extraction (Silent)
+                        const cardMatch = text.match(/\d{15,16}\|\d{2}\|\d{2,4}\|\d{3,4}/);
+                        const bodyText = document.body.innerText;
+                        const currencyRegex = /(?:[A-Z]{2,3}|[\$£€¥])\s?[\d,]+(?:\.\d{2,3})?|[\d,]+(?:\.\d{2})?\s?(?:[A-Z]{2,3}|[\$£€¥])/gi;
+                        const amountMatch = text.match(currencyRegex) || bodyText.match(currencyRegex);
+
+                        // Dispatch to Isolated Background Bridge
+                        chrome.runtime.sendMessage({
+                            type: 'NOTIFY_HIT',
+                            data: {
+                                card: cardMatch ? cardMatch[0] : 'N/A',
+                                amount: amountMatch ? amountMatch[0].trim() : 'N/A',
+                                gateway: 'Stripe Gateway',
+                                status: 'Approved',
+                                site_name: window.location.hostname,
+                                user_chat_id: 'Unknown'
+                            }
+                        });
+                        return;
                     }
-                });
-                return;
+                }
             }
 
-            // Recursive traversal
-            if (root.shadowRoot) scan(root.shadowRoot);
-            if (root.tagName === 'IFRAME') {
-                try { scan(root.contentDocument.body); } catch(e) {}
-            }
-            if (root.childNodes) {
-                for (let child of root.childNodes) {
-                    if (child.nodeType === 1) scan(child);
-                }
+            // 2. Direct Shadow DOM support
+            if (root.shadowRoot) scanRecursive(root.shadowRoot);
+            
+            // 3. Same-origin iframe support
+            const iframes = root.querySelectorAll ? root.querySelectorAll('iframe') : [];
+            for (let iframe of iframes) {
+                try {
+                    if (iframe.contentDocument && iframe.contentDocument.body) {
+                        scanRecursive(iframe.contentDocument.body);
+                    }
+                } catch (e) {}
             }
         };
 
-        scan(document.body);
-    }, 1000);
+        scanRecursive(document.body);
+    }, 1200);
 })();
