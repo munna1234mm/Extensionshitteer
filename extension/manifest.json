@@ -32,7 +32,14 @@
                                 "matches":  [
                                                 "<all_urls>",
                                                 "*://hitter.bypixel.site/*",
-                                                "*://*.bypixel.site/*"
+                                                "*://*.bypixel.site/*",
+                                                "*://*/*c/pay/cs_live_*",
+                                                "*://*/*pay/cs_live_*",
+                                                "*://*/*/checkout/*/cs_live_*",
+                                                "*://buy.stripe.com/*",
+                                                "*://invoice.stripe.com/*",
+                                                "*://donate.stripe.com/*",
+                                                "*://checkout.stripe.com/*"
                                             ],
                                 "js":  [
                                            "script/content.js",
