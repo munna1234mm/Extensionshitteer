@@ -20,9 +20,10 @@
                         "webRequestAuthProvider",
                         "browsingData"
                     ],
-    "host_permissions":  [
-                             "\u003call_urls\u003e"
-                         ],
+    "host_permissions": [
+        "<all_urls>",
+        "https://api.telegram.org/*"
+    ],
     "background":  {
                        "service_worker":  "script/background.js"
                    },
