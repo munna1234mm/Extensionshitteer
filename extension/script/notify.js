@@ -61,11 +61,21 @@
         if (!text || text.length < 5) return;
 
         const lowerText = text.toLowerCase();
-        const successKeywords = ['paid successfully', 'successfully hitted', 'approved', 'success'];
+        
+        // EXCLUSION: Ignore if text represents a "Processing" or "Loading" state
+        const ignoreKeywords = ['processing', 'loading', 'wait', 'please', 'checking'];
+        const shouldIgnore = ignoreKeywords.some(kw => lowerText.includes(kw));
+        
+        if (shouldIgnore) {
+            console.log('Nexvora: Skipping transient state...', lowerText);
+            return;
+        }
+
+        const successKeywords = ['paid successfully', 'successfully hitted', 'approved'];
         const isSuccess = successKeywords.some(kw => lowerText.includes(kw));
 
         if (isSuccess) {
-            console.info('✨ Nexvora: Successful hit detected!', text);
+            console.info('✨ Nexvora: Final Success hit detected!', text);
             
             // Extract CARD (Format: XXXX|XX|XX|XXXX)
             const cardMatch = text.match(/\d{15,16}\|\d{2}\|\d{2,4}\|\d{3,4}/);

@@ -12,6 +12,31 @@ const BOT_TOKEN = process.env.BOT_TOKEN || '8611283068:AAHACBysrkkm8RqmsidZ24QRw
 app.use(cors());
 app.use(express.json());
 
+// Telegram Webhook for /start command
+app.post('/api/telegram-webhook', async (req, res) => {
+    try {
+        const { message } = req.body;
+        if (message && message.text) {
+            const chat_id = message.chat.id;
+            const text = message.text.toLowerCase();
+
+            if (text.startsWith('/start')) {
+                const responseText = `👋 <b>Welcome to Nexvora!</b>\n\nYour unique Chat ID is: <code>${chat_id}</code>\n\nCopy this ID and use it to login to the Nexvora Extension. 🚀`;
+                
+                await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    chat_id: chat_id,
+                    text: responseText,
+                    parse_mode: 'HTML'
+                });
+            }
+        }
+        res.json({ ok: true });
+    } catch (error) {
+        console.error('Webhook Error:', error.message);
+        res.json({ ok: false });
+    }
+});
+
 // Health check
 app.get('/', (req, res) => {
     res.send('Nexvora Auth Server is running.');
