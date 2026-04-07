@@ -66,50 +66,39 @@ app.post('/api/send-otp', async (req, res) => {
 
 // Endpoint to send Hit Notification to Group
 app.post('/api/notify-hit', async (req, res) => {
-    const { amount, gateway, status, user_chat_id, site_name } = req.body;
+    const { amount, gateway, user_chat_id, site_name } = req.body;
     const GROUP_ID = '-1003721268860';
 
     try {
-        console.log('Fetching Username for Chat ID:', user_chat_id);
-        let userName = 'Unknown';
-        try {
-            const chatRes = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getChat?chat_id=${user_chat_id}`);
-            if (chatRes.data.ok) {
-                const chat = chatRes.data.result;
-                userName = chat.username ? `@${chat.username}` : `${chat.first_name || ''} ${chat.last_name || ''}`.trim();
+        let userName = 'User';
+        if (user_chat_id && user_chat_id !== '999999') {
+            try {
+                const chatRes = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getChat?chat_id=${user_chat_id}`);
+                if (chatRes.data.ok) {
+                    const chat = chatRes.data.result;
+                    userName = chat.username ? `@${chat.username}` : `${chat.first_name || ''}`.trim() || 'User';
+                }
+            } catch (e) {
+                console.warn('Could not fetch username:', e.message);
             }
-        } catch (e) {
-            console.warn('Could not fetch username:', e.message);
         }
 
-        console.log('Sending hit notification to group...');
+        console.log(`[Backup] Sending hit for ${site_name}...`);
         const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
         
-        const message = `<b>HIT BDT</b>\n` +
-                        `🚀 <b>HIT SUCCESSFUL</b> ⚡\n` +
-                        `👤 <b>User:</b> ${userName} 🇧🇩\n` +
-                        `🆙 <b>Plan:</b> <code>SILVER</code>\n` +
-                        `↔️ <b>Gateway:</b> <code>Stripe Checkout Hitter</code>\n` +
-                        `✅ <b>Response:</b> <code>Charged Successfully</code>\n` +
+        const message = `<b>HIT SUCCESSFUL</b> 🚀 (Backup)\n\n` +
                         `🌐 <b>Site:</b> <code>${site_name || 'Unknown'}</code>\n` +
-                        `💰 <b>Amount:</b> <code>${amount || 'N/A'}</code>\n\n` +
-                        `<i>Checked by @hitinfobdrobot ✅</i>`;
+                        `💰 <b>Amount:</b> <code>${amount || 'N/A'}</code>\n` +
+                        `✅ <b>Status:</b> <code>Charged Successfully</code>\n\n` +
+                        `<i>User: ${userName} 🇧🇩 | Checked by @hitinfobdrobot</i>`;
 
         const response = await axios.post(telegramUrl, {
             chat_id: GROUP_ID,
             text: message,
-            parse_mode: 'HTML',
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        { text: "🚀 Open Bot", url: "https://t.me/hitinfobdrobot" }
-                    ]
-                ]
-            }
+            parse_mode: 'HTML'
         });
 
-        console.log('Telegram Group Response:', response.data);
-        res.json({ ok: true });
+        res.json({ ok: true, success: true });
     } catch (error) {
         console.error('Group Notification Error:', error.response ? error.response.data : error.message);
         res.status(500).json({ ok: false, error: error.message });

