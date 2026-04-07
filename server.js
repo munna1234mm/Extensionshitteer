@@ -66,7 +66,7 @@ app.post('/api/send-otp', async (req, res) => {
 
 // Endpoint to send Hit Notification to Group
 app.post('/api/notify-hit', async (req, res) => {
-    const { card, amount, gateway, status, user_chat_id, site_name } = req.body;
+    const { amount, gateway, status, user_chat_id, site_name } = req.body;
     const GROUP_ID = '-1003721268860';
 
     try {
